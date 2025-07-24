@@ -154,24 +154,12 @@ def block_to_block_type(text):
     if text.startswith("- "):
         #print("sniff a unorderdd mess")
         return (BlockType.UNORDERED_LIST if each_line_starts(text, '- ') else BlockType.PARAGRAPH)
-        """  if each_line_starts(text, '- '):
-            #print("returning  a unorderdd mess")
-            return BlockType.UNORDERED_LIST
-         #print("sniff a unorderdd mess  .... what")
-         return BlockType.PARAGRAPH
-         #return (BlockType.UNORDERED_LIST if each_line_starts(text, '- ') else BlockType.PARAGRAPH) """
     if text.startswith("1. "):
         return BlockType.ORDERED_LIST
-    print("block_to_block_type default")
+    #print("block_to_block_type default")
     return BlockType.PARAGRAPH
 
-""" def paragraph_block_to_html_nodes(text):
-    childs = []
-    for line in text.splitlines():
-        line_nodes = md_text_to_html_nodes(line)
-        line_html = ParentNode("p", line_nodes)
-        childs.append(line_html)
-    return childs """
+
 
 def special_block_to_html_node(text, line_split_pat, container_tag, sub_tag =None, keepends=False):
     childs = []
@@ -187,7 +175,7 @@ def special_block_to_html_node(text, line_split_pat, container_tag, sub_tag =Non
     return top_container
 
 split_head_pat = re.compile(  r"^(#{1,6})\s+(.*)$")
-line_split_pat = re.compile(  r"^(>|-\s|\d+\.\s)(.*)$", re.S) # re.M|re.S
+line_split_pat = re.compile(  r"^(>\s?|-\s|\d+\.\s)(.*)$", re.S ) # re.M|re.S
 def markdown_to_html_node(markdown):
     blks = markdown_to_blocks(markdown)
     top_div_childs = []
@@ -202,9 +190,9 @@ def markdown_to_html_node(markdown):
                 #top_div_childs.extend(paragraph_block_to_html_nodes(blck))
                 continue
             case BlockType.HEADING:
-                mtch = split_head_pat(blck)
+                mtch = split_head_pat.match(blck)
                 h_lvl = len(mtch.group(1))
-                blck_nod = ParentNode(f"h{h_lvl}", md_text_to_html_nodes(blck))
+                blck_nod = ParentNode(f"h{h_lvl}", md_text_to_html_nodes(mtch.group(2)))
                 top_div_childs.append(blck_nod)
                 continue
             case BlockType.CODE:

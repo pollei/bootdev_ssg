@@ -36,8 +36,8 @@ class LeafNode(HtmlNode):
     def to_html(self):
         if self.value is None: raise ValueError("LeafNode must have a value")
         if self.children is not None: raise ValueError("LeafNode must NOT have children")
-        esc_val = html.escape(self.value)
-        if self.tag is None: return html.escape(esc_val)
+        esc_val = html.escape(self.value, quote=False)
+        if self.tag is None: return esc_val
         html_tag = self.tag
         if self.close_tag:
             if self.props is None:

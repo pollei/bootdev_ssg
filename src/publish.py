@@ -9,7 +9,8 @@ from md_to_html import markdown_to_html_node
 """
   Allowed:
     os.path.exists, os.listdir, os.path.join, os.path.isfile, os.mkdir
-    shutil.copy, shutil.rmtree
+    shutil.copy, shutil.rmtree, pathlib.Path, os.path.dirname, os.makedirs
+
   Disallowed: shutil.copytree 
 
 """
@@ -23,13 +24,13 @@ def extract_title(markdown):
 
 def clean_public():
     try:
-         shutil.rmtree("public")
-         os.mkdir("public")
+         shutil.rmtree("docs")
+         os.mkdir("docs")
     except Exception as err:
         print(f"{err=}")
     
 
-def publish_static(to_path = "public", from_path="static"):
+def publish_static(to_path = "docs", from_path="static"):
     dir_lst, file_lst = [], []
     try:
         scan_iter = os.scandir(from_path)
@@ -74,8 +75,8 @@ def gulp_file(file_name):
     return file_content
       
 
-def generate_page(from_path, template_path, dest_path):
-    print(f"Generating page from {from_path=} to {dest_path=} using {template_path=}")
+def generate_page(from_path, template_path, dest_path, base_path=None):
+    print(f"Generating page from {from_path=} to {dest_path=} using {template_path=} and {base_path=}")
     try:
         template = gulp_file(template_path)
         markdown = gulp_file(from_path)
@@ -89,6 +90,9 @@ def generate_page(from_path, template_path, dest_path):
     #print(f"{html_txt=}")
     out_content = template.replace("{{ Title }}", title)
     out_content = out_content.replace("{{ Content }}", html_txt)
+    if base_path is not None:
+        out_content = out_content.replace('href="/', f'href="{base_path}')
+        out_content = out_content.replace('src="/', f'src="{base_path}')
     #print(f"{out_content=}")
     dest_dir = os.path.dirname(dest_path)
     os.makedirs(dest_dir, exist_ok=True)
@@ -103,7 +107,9 @@ def generate_page(from_path, template_path, dest_path):
         print(f"generate_page failed write {dest_path=} {from_path=} {err=}")
 
 
-def generate_pages_recursive(dir_path_content="content", template_path="template.html", dest_dir_path="public"):
+def generate_pages_recursive(dir_path_content="content", template_path="template.html",
+            dest_dir_path="docs", base_path=None):
+    print(f"Generating pages from {dir_path_content=} to {dest_dir_path=} using {template_path=} and {base_path=}")
     dir_lst, file_lst = [], []
     try:
         scan_iter = os.scandir(dir_path_content)
@@ -123,10 +129,10 @@ def generate_pages_recursive(dir_path_content="content", template_path="template
         if not file_name.endswith(".md"): continue
         path_md_content = os.path.join(dir_path_content , file_name)
         path_html_output = os.path.join(dest_dir_path, file_name[:-3] + ".html")
-        generate_page(path_md_content, template_path, path_html_output)
+        generate_page(path_md_content, template_path, path_html_output, base_path)
     for dir_name in dir_lst:
             to_new = os.path.join(dest_dir_path, dir_name)
             from_new = os.path.join(dir_path_content , dir_name)
-            print(f"enerate_pages_recursiv new dir {to_new=} {from_new=}")
-            generate_pages_recursive(from_new, template_path, to_new)
+            #print(f"generate_pages_recursiv new dir {to_new=} {from_new=} {base_path=}")
+            generate_pages_recursive(from_new, template_path, to_new, base_path)
 
